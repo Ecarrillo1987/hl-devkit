@@ -1,11 +1,21 @@
 {
   "name": "hl-devkit",
   "description": "Internal development kit: guardrails, skills and agents for the team workflow",
-  "version": "0.3.2",
+  "version": "0.4.0",
   "author": {
     "name": "Erick Carrillo"
   },
   "userConfig": {
+    "dev_name": {
+      "type": "string",
+      "title": "Developer name",
+      "description": "Your name as it appears in daily reports. Example: Juan"
+    },
+    "repo_path": {
+      "type": "directory",
+      "title": "Work repository path",
+      "description": "Absolute path of the repository you work on. Example: D:\\HomeLand\\Repo_Huawei"
+    },
     "legacy_path": {
       "type": "directory",
       "title": "Legacy code path",
