@@ -1,8 +1,23 @@
 {
   "name": "hl-devkit",
   "description": "Internal development kit: guardrails, skills and agents for the team workflow",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "author": {
     "name": "Erick Carrillo"
+  },
+  "userConfig": {
+    "legacy_path": {
+      "type": "directory",
+      "title": "Legacy code path",
+      "description": "Absolute path of the legacy PHP code on this machine (read-only for the agent). Example: D:\\HomeLand\\PHP Migration",
+      "required": true
+    },
+    "extra_sensitive_files": {
+      "type": "string",
+      "title": "Extra sensitive files",
+      "description": "Additional file name patterns the agent must never read (wildcards * and ?). Example: huawei-credentials.csv, *.secret.json",
+      "multiple": true,
+      "default": []
+    }
   }
 }
