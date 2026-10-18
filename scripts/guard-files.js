@@ -26,10 +26,10 @@ const FILE_WRITE_TOOLS = ['Edit', 'Write', 'MultiEdit', 'NotebookEdit'];
 const FILE_READ_TOOLS = ['Read', 'Grep'];
 const SHELL_TOOLS = ['Bash', 'PowerShell'];
 
-const SAFE_ENV_TEMPLATES = ['.env.example', '.env.sample', '.env.template'];
+const SAFE_TEMPLATE_SUFFIX = /\.(example|sample|template)$/;
 
 const BUILTIN_SENSITIVE_PATTERNS = [
-  /^\.env(\..+)?$/,
+  /^\.env([._-].*)?$/,
   /\.env$/,
   /\.(pem|key|p12|pfx|jks|keystore)$/,
   /^id_(rsa|dsa|ecdsa|ed25519)$/,
@@ -121,7 +121,7 @@ function loadConfig(cwd) {
 function isSensitiveFile(rawPath, config) {
   if (!rawPath) return false;
   const name = basenameOf(rawPath);
-  if (SAFE_ENV_TEMPLATES.includes(name)) return false;
+  if (SAFE_TEMPLATE_SUFFIX.test(name)) return false;
   return config.sensitivePatterns.some((re) => re.test(name));
 }
 
