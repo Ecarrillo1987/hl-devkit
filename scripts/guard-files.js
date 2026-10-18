@@ -90,17 +90,22 @@ function basenameOf(rawPath) {
   return String(rawPath).replace(/\\/g, '/').replace(/\/+$/, '').split('/').pop().toLowerCase();
 }
 
+/**
+ * Parse a list option: accepts a JSON array or a delimited string, and splits each
+ * entry on commas, semicolons, newlines or whitespace (one field with "a, b" works too).
+ */
 function parseList(value) {
   if (!value) return [];
+  let entries = [String(value)];
   try {
     const parsed = JSON.parse(value);
-    if (Array.isArray(parsed)) return parsed.map(String).filter(Boolean);
+    if (Array.isArray(parsed)) entries = parsed.map(String);
   } catch {
-    // not JSON, fall through to delimiter split
+    // not JSON, keep the raw string
   }
-  return String(value)
-    .split(/[,;\n]/)
-    .map((v) => v.trim())
+  return entries
+    .flatMap((entry) => entry.split(/[,;\s]+/))
+    .map((v) => v.trim().replace(/^["']|["']$/g, ''))
     .filter(Boolean);
 }
 
