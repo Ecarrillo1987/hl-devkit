@@ -19,10 +19,12 @@ function devBlock() {
   const name = process.env.CLAUDE_PLUGIN_OPTION_DEV_NAME || '';
   const repo = process.env.CLAUDE_PLUGIN_OPTION_REPO_PATH || '';
   const legacy = process.env.CLAUDE_PLUGIN_OPTION_LEGACY_PATH || '';
+  const specs = process.env.CLAUDE_PLUGIN_OPTION_SPECS_PATH || '';
   const lines = ['## Esta estación de trabajo'];
   lines.push(`- Dev: ${name || 'sin configurar'}`);
   if (repo) lines.push(`- Repositorio de trabajo: ${repo}`);
   if (legacy) lines.push(`- Código legacy (solo lectura): ${legacy}`);
+  if (specs) lines.push(`- Specs de migración (fuera del repo del cliente): ${specs}`);
   if (!name) lines.push('- La configuración del kit está incompleta: falta el nombre del dev (ver README del kit).');
   return lines.join('\n');
 }

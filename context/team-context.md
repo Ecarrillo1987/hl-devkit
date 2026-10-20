@@ -53,6 +53,8 @@ Quién decide:
 
 Análisis del PHP antes de escribir: todas las reglas de negocio, dependencias, validaciones de seguridad financiera, código muerto y patrones a no replicar (por ejemplo SQL por interpolación).
 
+Flujo con specs (antes de la fase 0): `/hl-devkit:spec <endpoint>` (qué hace hoy el PHP) → `/hl-devkit:plan <endpoint>` (cómo se migra) → `/hl-devkit:tasks <endpoint>` (tareas por fase) → implementación marcando `tasks.md`. Cada paso arranca solo si el anterior está aprobado. Las specs viven en la carpeta de specs del dev, nunca dentro del repo del cliente ni en commits o MR, y no llevan credenciales ni datos de clientes.
+
 ## Contrato y criterios de migración
 - Se mantiene el contrato del PHP (entrada y respuesta) salvo decisión explícita. Mejoras internas (seguridad, tipos, validación) sí; cambios de lógica no.
 - Wrapper por defecto `{status, message, response_code}`. Si el legacy devuelve un primitivo o array desnudo, no se envuelve (contrato productivo).
