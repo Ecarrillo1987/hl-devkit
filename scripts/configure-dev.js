@@ -8,14 +8,15 @@
  * .git/info/exclude of the work repository. Never touches tracked repository files.
  *
  * Usage:
- *   node configure-dev.js --name "Juan" --legacy "D:\HomeLand\PHP Migration" --repo "D:\HomeLand\Repo_Huawei"
+ *   node configure-dev.js --name "Juan" --legacy "D:\HomeLand\PHP Migration" --repo "D:\HomeLand\Repo_Huawei" --specs "D:\HomeLand\specs"
  *   Optional: --plugin-key hl-devkit@inline   (default; use the marketplace key once installed from it)
  *
  * What it sets:
- *  - pluginConfigs[<key>].options: dev_name, legacy_path, repo_path, extra_sensitive_files (defaults kept/merged)
+ *  - pluginConfigs[<key>].options: dev_name, legacy_path, repo_path, specs_path, extra_sensitive_files (defaults kept/merged)
  *  - permissions.allow += Read(<legacy>/**)   read legacy without prompts
  *  - permissions.deny  += Edit(<legacy>/**)   legacy is never edited (enforced by the agent runtime)
  *  - attribution.commit = "", attribution.pr = ""   no commit trailer or PR attribution from the agent
+ *  - permissions.allow += Read(<specs>/**) and Edit(<specs>/**)   specs written without prompts (outside client repos)
  *  - <repo>/.git/info/exclude += .claude/     agent settings never reach the client repository
  *
  * Creates a timestamped backup of settings.json first. Safe to run more than once.
@@ -57,17 +58,30 @@ function main() {
   const name = (args.name || '').trim();
   const legacy = (args.legacy || '').trim();
   const repo = (args.repo || '').trim();
+  const specs = (args.specs || '').trim();
   const pluginKey = (args['plugin-key'] || 'hl-devkit@inline').trim();
 
-  if (!name || !legacy || !repo) {
-    fail('Faltan parámetros. Uso: node configure-dev.js --name "Nombre" --legacy "<ruta legacy>" --repo "<ruta repo>"');
+  if (!name || !legacy || !repo || !specs) {
+    fail('Faltan parámetros. Uso: node configure-dev.js --name "Nombre" --legacy "<ruta legacy>" --repo "<ruta repo>" --specs "<ruta specs>"');
   }
   if (!fs.existsSync(legacy)) fail(`No existe la carpeta legacy: ${legacy}`);
   if (!fs.existsSync(path.join(repo, '.git'))) fail(`No es un repositorio git: ${repo}`);
 
+  const isInside = (child, parent) => {
+    const rel = path.relative(path.resolve(parent), path.resolve(child));
+    return rel === '' || (!rel.startsWith('..') && !path.isAbsolute(rel));
+  };
+  if (isInside(specs, repo)) fail(`La carpeta de specs no puede estar dentro del repositorio de trabajo: ${specs}`);
+  if (isInside(specs, legacy)) fail(`La carpeta de specs no puede estar dentro del legacy: ${specs}`);
+  if (fs.existsSync(specs) && fs.existsSync(path.join(specs, '.git'))) {
+    fail(`La carpeta de specs no puede ser un repositorio git (las specs no se versionan en repos compartidos por ahora): ${specs}`);
+  }
+
   let legacyRule;
+  let specsRule;
   try {
     legacyRule = toRulePath(legacy);
+    specsRule = toRulePath(specs);
   } catch (err) {
     fail(err.message);
   }
@@ -94,6 +108,8 @@ function main() {
   };
   addUnique('allow', `Read(${legacyRule})`);
   addUnique('deny', `Edit(${legacyRule})`);
+  addUnique('allow', `Read(${specsRule})`);
+  addUnique('allow', `Edit(${specsRule})`);
 
   // No commit trailer or PR attribution from the agent (project rule: no AI attribution).
   settings.attribution = { ...(settings.attribution || {}), commit: '', pr: '' };
@@ -104,9 +120,11 @@ function main() {
   options.dev_name = name;
   options.legacy_path = legacy;
   options.repo_path = repo;
+  options.specs_path = specs;
   const current = Array.isArray(options.extra_sensitive_files) ? options.extra_sensitive_files : [];
   options.extra_sensitive_files = [...new Set([...current, ...DEFAULT_SENSITIVE])];
 
+  fs.mkdirSync(specs, { recursive: true });
   fs.mkdirSync(path.dirname(settingsPath), { recursive: true });
   fs.writeFileSync(settingsPath, `${JSON.stringify(settings, null, 2)}\n`);
 

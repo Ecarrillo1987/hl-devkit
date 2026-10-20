@@ -1,7 +1,7 @@
 {
   "name": "hl-devkit",
   "description": "Internal development kit: guardrails, skills and agents for the team workflow",
-  "version": "0.5.0",
+  "version": "0.6.1",
   "author": {
     "name": "Erick Carrillo"
   },
@@ -15,6 +15,11 @@
       "type": "directory",
       "title": "Work repository path",
       "description": "Absolute path of the repository you work on. Example: D:\\HomeLand\\Repo_Huawei"
+    },
+    "specs_path": {
+      "type": "directory",
+      "title": "Specs path",
+      "description": "Absolute path where migration specs are kept, outside any client repository. Example: D:\\HomeLand\\specs"
     },
     "legacy_path": {
       "type": "directory",
