@@ -3,12 +3,12 @@
 Migración del backend de la billetera Akisi de Génesis Empresarial (entidad financiera guatemalteca en proceso de licencia bancaria ante la SIB) de PHP/CodeIgniter a NestJS con microservicios. Proveedor: Homeland. Responsable técnico: Erick (DevOps/Delivery).
 
 Quién decide:
-- Cambios de arquitectura o decisiones que afectan a todo el sistema (packages compartidos, gateway, pipeline, infraestructura, contratos entre servicios): se validan con Erick antes de implementarlos.
+- Cambios de arquitectura o decisiones que afectan a todo el sistema (packages compartidos, gateway, pipeline, infraestructura, contratos entre servicios) y cualquier cambio en lo que recibe el front (respuesta, códigos de error, campos): se validan con Erick antes de implementarlos.
 - Decisiones de lógica dentro de un endpoint: las toma el dev en el momento, junto con su agente, siguiendo este método.
 - Alcance y prioridades del backlog: los define Erick.
 
 ## Reglas no negociables
-1. Sin cambios sin confirmación: antes de modificar archivos se muestra qué cambia y por qué, y se espera un OK explícito del dev.
+1. Sin cambios sin confirmación: antes de editar, el plan dice por archivo qué cambia y por qué. El OK del dev a ese plan cubre esas ediciones. Todo lo que quede fuera del plan se muestra y se aprueba aparte.
 2. Verdad técnica: si algo está mal o tiene riesgos, se dice con fundamento, aunque no se pregunte. Los riesgos se marcan con 🚨.
 3. Confidencialidad: código, datos y lógica de negocio son de Génesis. Nada se envía a servicios externos. Nunca se exponen ni se loguean datos de clientes.
 4. Idioma: documentación, comentarios y mensajes en español; nombres de archivos, clases, funciones y variables en inglés.
@@ -18,6 +18,7 @@ Quién decide:
 8. Base de datos: el agente no accede a MySQL. Las consultas (DESCRIBE, snapshots, restores) las corre el dev a mano.
 9. El PHP legacy es solo lectura. msa-transaction está fuera del MVP y no se modifica.
 10. Lógica financiera (pagos, auth) nunca se completa sin revisión humana. Pagos y auth requieren aprobación dual antes del merge.
+11. Si este contexto y el `CLAUDE.md` del proyecto chocan, se aplica la regla más estricta y se avisa a Erick.
 
 ## Contexto regulatorio (SIB)
 - Toda operación monetaria va dentro de una transacción de BD, con log de auditoría antes y después de cada escritura financiera.
@@ -29,16 +30,16 @@ Quién decide:
 - Destino: monorepo NestJS con npm workspaces y Turborepo. `npm ci`, build, test y lint siempre desde la raíz.
   - `apps/msa-customer`: microservicio de clientes (puerto 3002).
   - `apps/mdl-billetera`: gateway, auth y validación (puerto 3000). No existe en el PHP.
-  - Packages compartidos: `@akisi/sequelize-models`, `@akisi/error-handler`, `external-dependencies`, `query-services`.
+  - Packages compartidos: `@akisi/sequelize-models`, `@akisi/error-handler`, `external-dependencies`, `query-services`, `encryption`.
 - NestJS 11, TypeScript, Sequelize (modelos centralizados), BD MySQL `pronet` (requiere VPN).
 - En local el gateway llega al msa por `http://127.0.0.1:3002` (no `localhost`, por IPv6).
-- CI/CD en Huawei CodeArts: cada MR a develop corre el pipeline y requiere aprobación; el merge a develop despliega a DEV. El YAML del pipeline no se edita desde la consola.
+- CI/CD en Huawei CodeArts: cada MR a develop corre el pipeline y requiere aprobación; el merge a develop despliega a DEV solo los servicios que cambiaron. El YAML del pipeline no se edita desde la consola.
 
 ## Método de migración de un endpoint (orden estricto)
 | Fase | Tarea |
 |---|---|
 | 0 | Rama `feature/<endpoint>` desde develop actualizado y limpio |
-| 1 | Modelos Sequelize (N/A si ya existen) |
+| 1 | Modelos Sequelize (N/A si ya existen; tipos validados con DESCRIBE) |
 | 2 | DTO del msa con class-validator, mensajes en español natural |
 | 3.A | Catálogo de errores (código + mensaje) |
 | 3.B | Use-case con la lógica de negocio |
@@ -58,7 +59,7 @@ Flujo con specs (antes de la fase 0): `/hl-devkit:spec <endpoint>` (qué hace ho
 ## Contrato y criterios de migración
 - Se mantiene el contrato del PHP (entrada y respuesta) salvo decisión explícita. Mejoras internas (seguridad, tipos, validación) sí; cambios de lógica no.
 - Wrapper por defecto `{status, message, response_code}`. Si el legacy devuelve un primitivo o array desnudo, no se envuelve (contrato productivo).
-- Los bugs del legacy se corrigen y se documenta qué se corrigió y por qué.
+- Bugs del legacy: es bug cuando el PHP hace algo distinto a lo que pretendía (dato corrupto, validación comentada, índice fijo). Se corrige y se documenta en la spec y en el MR; el MR explica la corrección sin mencionar la spec ni el kit. Si la corrección cambia lo que recibe el front (respuesta, códigos de error, campos), lo decide Erick y se coordina con el front.
 - Un stored procedure que solo hace SELECT pasa a raw query parametrizada en el repo (trazabilidad para la SIB).
 - Mensajes de error en español natural, nunca nombres técnicos de campos ("El teléfono es requerido", no "telno es requerido").
 

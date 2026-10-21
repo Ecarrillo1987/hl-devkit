@@ -1,7 +1,7 @@
 {
   "name": "hl-devkit",
   "description": "Internal development kit: guardrails, skills and agents for the team workflow",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "author": {
     "name": "Erick Carrillo"
   },
