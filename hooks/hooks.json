@@ -43,6 +43,19 @@
             "timeout": 10
           }
         ]
+      },
+      {
+        "matcher": "mcp__codebase-memory__.*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": [
+              "${CLAUDE_PLUGIN_ROOT}/scripts/redact-keys.js"
+            ],
+            "timeout": 10
+          }
+        ]
       }
     ],
     "SessionStart": [
